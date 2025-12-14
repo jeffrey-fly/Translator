@@ -1,13 +1,34 @@
-from google import genai
+# from google import genai
+#
+# def main():
+#     client = genai.Client()
+#
+#     response = client.models.generate_content(
+#         model="gemini-2.5-flash", contents="翻译：hello,how are you?"
+#     )
+#     print(response.text)
+#
+# if __name__ == '__main__':
+#     print("hello world")
+#     main()
+
+# app.py
+"""
+程序入口：负责创建 QApplication 并启动主窗口
+"""
+
+import sys
+from PySide6.QtWidgets import QApplication
+from gui.main_window import MainWindow
+
 
 def main():
-    client = genai.Client()
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash", contents="Explain how AI works in a few words"
-    )
-    print(response.text)
 
-if __name__ == '__main__':
-    print("hello world")
+if __name__ == "__main__":
     main()
+
