@@ -31,8 +31,8 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
+    main()
 
-    translated = translate_text("run", target_language="zh")
-    print(translated)
+    # translated = translate_text("run", target_language="zh")
+    # print(translated)
 

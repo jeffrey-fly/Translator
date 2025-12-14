@@ -3,7 +3,7 @@
 """
 主窗口：Qt 翻译软件界面（仅 UI，不包含具体翻译实现）
 """
-
+from services.translation.google_service import translate_text
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -87,7 +87,8 @@ class MainWindow(QMainWindow):
         dst = self.dst_lang.currentText()
 
         # TODO: 替换为真实翻译逻辑
-        result = f"[Mock Translation]\nFrom: {src} -> To: {dst}\n\n{text}"
+        result = translate_text(text, target_language=dst)
+        # result = f"[Mock Translation]\nFrom: {src} -> To: {dst}\n\n{text}"
 
         self.output_edit.setPlainText(result)
 
