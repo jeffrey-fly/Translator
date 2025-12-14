@@ -16,6 +16,7 @@
 """
 程序入口：负责创建 QApplication 并启动主窗口
 """
+from services.translation.google_service import translate_text
 
 import sys
 from PySide6.QtWidgets import QApplication
@@ -30,5 +31,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+
+    translated = translate_text("run", target_language="zh")
+    print(translated)
 
