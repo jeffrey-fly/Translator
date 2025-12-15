@@ -3,7 +3,9 @@
 """
 主窗口：Qt 翻译软件界面（仅 UI，不包含具体翻译实现）
 """
-from services.translation.google_service import translate_text
+from encodings.punycode import selective_find
+
+from services.translation.google_service import GoogleTranslator
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -73,6 +75,8 @@ class MainWindow(QMainWindow):
         self.translate_btn.clicked.connect(self.on_translate)
         self.clear_btn.clicked.connect(self.on_clear)
 
+        self.translator = GoogleTranslator()
+
     def on_translate(self):
         """
         翻译按钮回调（当前为占位实现）
@@ -87,8 +91,8 @@ class MainWindow(QMainWindow):
         dst = self.dst_lang.currentText()
 
         # TODO: 替换为真实翻译逻辑
-        result = translate_text(text, target_language=dst)
-        # result = f"[Mock Translation]\nFrom: {src} -> To: {dst}\n\n{text}"
+        # result = translate_text(text, dst, src)
+        result = self.translator.translate(text, dst, src)
 
         self.output_edit.setPlainText(result)
 
