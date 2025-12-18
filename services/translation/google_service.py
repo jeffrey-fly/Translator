@@ -1,11 +1,41 @@
 import re
 from google import genai
 from google.genai import types
+
 from .base import BaseTranslatorService
 
-client = genai.Client()
-
 class GoogleTranslator(BaseTranslatorService):
+    def __init__(self, api_key = None):
+        self._client = None
+        self._api_key = api_key
+        self.model_name = "gemini-2.5-flash-lite"
+
+    @property
+    def client(self) -> genai.Client:
+        """
+        每次访问 self.client 时，都会检查 _client 是否已实例化。
+        """
+        if self._client is None:
+            if not self._api_key:
+                raise ValueError(
+                    "【配置错误】Google API Key 尚未设置。 "
+                    "请在初始化时传入或调用 .set_api_key() 方法。"
+                )
+
+            # 只有在有 Key 且 client 为空时才创建实例
+            print(f"正在使用 Key [***{self._api_key[-4:]}] 初始化 Google GenAI Client...")
+            self._client = genai.Client(api_key=self._api_key)
+
+        return self._client
+
+    def set_api_key(self, api_key: str):
+        """
+        动态更新 API Key。
+        更新后会将旧的 client 置空，下次请求时会自动重连。
+        """
+        if api_key and api_key != self._api_key:
+            self._api_key = api_key
+            self._client = None
 
     @staticmethod
     def _is_single_word(text: str) -> bool:
@@ -36,8 +66,8 @@ class GoogleTranslator(BaseTranslatorService):
         else:
             prompt = f"Translate the following {source_language} text into {target_language}:\n{text}\nDo not add any extra explanations or examples."
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
+        response = self.client.models.generate_content(
+            model=self.model_name,
             contents=[prompt],
             config=types.GenerateContentConfig(temperature=0)
         )

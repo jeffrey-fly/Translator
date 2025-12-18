@@ -1,11 +1,13 @@
 # ------------------------------
 # main_window.py
 """
-主窗口：Qt 翻译软件界面（仅 UI，不包含具体翻译实现）
+主窗口：Qt 翻译软件界面
 """
-from encodings.punycode import selective_find
+from PySide6.QtCore import QTranslator
 
-from services.translation.google_service import GoogleTranslator
+from gui.config_window import TranslatorConfigWindow, load_json_config, KeyStore
+
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -18,12 +20,39 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
+from services.translation.google_service import GoogleTranslator
+from utils.constants import (
+    PROVIDER_OPENAI,
+    PROVIDER_GOOGLE,
+    PROVIDER_DEEPSEEK
+)
+
+from utils.provider import ProviderManager, provider_manager
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Translator")
         self.resize(800, 500)
+
+        # 创建菜单栏
+        menu_bar = self.menuBar()
+
+        # 添加一个“配置”菜单
+        config_menu = menu_bar.addMenu("配置")
+
+        # 创建一个菜单动作
+        settings_action = QAction("设置", self)
+        settings_action.triggered.connect(self.open_settings)
+
+        # 添加到菜单
+        config_menu.addAction(settings_action)
+
+        config_menu.addSeparator()
+        config_menu.addAction("退出", self.close)
+
+        self.config_window = None
 
         central = QWidget(self)
         self.setCentralWidget(central)
@@ -75,13 +104,43 @@ class MainWindow(QMainWindow):
         self.translate_btn.clicked.connect(self.on_translate)
         self.clear_btn.clicked.connect(self.on_clear)
 
-        self.translator = GoogleTranslator()
+        self.provider_manager = ProviderManager()
+        self.json_config_data = load_json_config()
+        for p in provider_manager.providers.values():
+            enable = self.json_config_data.get(p.name, False)
+            if enable:
+                p.enable()
+            else:
+                p.disable()
+        self.translator = None
+
+    def open_settings(self):
+        if self.config_window is None:
+            self.config_window = TranslatorConfigWindow()
+
+        self.config_window.show()
+        self.config_window.raise_()  # 提到最前
+        self.config_window.activateWindow()  # 获取焦点
 
     def on_translate(self):
         """
         翻译按钮回调（当前为占位实现）
         后续可在这里接入 OpenAI / Google / 本地模型
         """
+        providers_name = provider_manager.enabled_providers()
+        first_provider = providers_name[0] if providers_name else None
+        if not first_provider:
+            QMessageBox.warning(self, "Warning", "please config first")
+            return
+
+        if not self.translator:
+            if first_provider == PROVIDER_GOOGLE:
+                self.translator = GoogleTranslator(provider_manager.get_provider(PROVIDER_GOOGLE).key)
+
+        if not self.translator:
+            QMessageBox.warning(self, "Warning", "no provider")
+            return
+
         text = self.input_edit.toPlainText().strip()
         if not text:
             QMessageBox.warning(self, "Warning", "Input text is empty")
